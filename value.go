@@ -8,7 +8,7 @@ import (
 
 type (
 	Item[T any] struct {
-		value   *T
+		value   T
 		startAt time.Time
 		endAt   time.Time
 	}
@@ -21,7 +21,7 @@ var (
 	ErrItemUnexception  = errors.New("Item: unexpection")
 )
 
-func NewItem[T any](value *T, startAt, endAt time.Time) (*Item[T], error) {
+func NewItem[T any](value T, startAt, endAt time.Time) (*Item[T], error) {
 	if startAt.IsZero() {
 		return nil, ErrItemStartAtEmpty
 	}
@@ -38,32 +38,32 @@ func NewItem[T any](value *T, startAt, endAt time.Time) (*Item[T], error) {
 	}, nil
 }
 
-func (i Item[T]) Value() T {
-	return *i.value
+func (i* Item[T]) Value() T {
+	return i.value
 }
 
-func (i Item[T]) StartAt() time.Time {
+func (i* Item[T]) StartAt() time.Time {
 	return i.startAt
 }
 
-func (i Item[T]) EndAt() time.Time {
+func (i* Item[T]) EndAt() time.Time {
 	return i.endAt
 }
 
-func (i Item[T]) Contains(t time.Time) bool {
+func (i* Item[T]) Contains(t time.Time) bool {
 	return i.startAt.Compare(t) <= 0 && i.endAt.Compare(t) >= 0
 }
 
 // 既存期間と追加期間が重複している場合は、追加期間を優先して調整した既存期間を返す
-func (i Item[T]) Adjust(adding *Item[T]) ([]*Item[T], error) {
+func (i *Item[T]) Adjust(adding *Item[T]) ([]*Item[T], error) {
 	// 追加期間に対し、既存期間は重複しない前方に位置するため、そのまま返す
 	if adding.startAt.Compare(i.endAt) > 0 {
-		return []*Item[T]{&i}, nil
+		return []*Item[T]{i}, nil
 	}
 
 	// 追加期間に対し、既存期間は重複しない後方に位置するため、そのまま返す
 	if adding.endAt.Compare(i.startAt) < 0 {
-		return []*Item[T]{&i}, nil
+		return []*Item[T]{i}, nil
 	}
 
 	// 追加期間が既存期間を包含するため、nilで返す

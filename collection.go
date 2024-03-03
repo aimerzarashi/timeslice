@@ -42,18 +42,18 @@ func NewCollection[T any](initItems ...*Item[T]) (*Collection[T], error) {
 	}, nil
 }
 
-func (c Collection[T]) Items() []*Item[T] {
+func (c *Collection[T]) Items() []*Item[T] {
 	return c.items
 }
 
-func (d Collection[T]) Find(criteria time.Time) (Item[T], error) {
-	for _, v := range d.items {
+func (c *Collection[T]) Find(criteria time.Time) (*Item[T], error) {
+	for _, v := range c.items {
 		if v.Contains(criteria) {
-			return *v, nil
+			return v, nil
 		}
 	}
 
-	return Item[T]{}, ErrCollectionNotFound
+	return nil, ErrCollectionNotFound
 }
 
 func (d *Collection[T]) Add(adding *Item[T]) (*Collection[T], error) {

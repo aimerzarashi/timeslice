@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/aimerzarashi/timeslice"
+	"github.com/aimerzarashi/timeslice/internal/helper"
 )
 
 func TestNewItem(t *testing.T) {
@@ -84,7 +85,7 @@ func TestNewItem(t *testing.T) {
 			t.Parallel()
 
 			// When
-			got, err := timeslice.NewItem(&tt.args.value, tt.args.startAt, tt.args.endAt)
+			got, err := timeslice.NewItem(tt.args.value, tt.args.startAt, tt.args.endAt)
 
 			// Then
 			if !tt.wantErr {
@@ -149,12 +150,12 @@ func TestItem_Adjust(t *testing.T) {
 		{
 			name: "success/1",
 			args: args{
-				existing: NewItem(&existing, time.Date(2024, 1, 1, 9, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 9, 59, 59, 0, time.UTC)),
-				adding:   NewItem(&adding, time.Date(2024, 1, 1, 8, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 8, 59, 59, 0, time.UTC)),
+				existing: helper.NewItem(existing, time.Date(2024, 1, 1, 9, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 9, 59, 59, 0, time.UTC)),
+				adding:   helper.NewItem(adding, time.Date(2024, 1, 1, 8, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 8, 59, 59, 0, time.UTC)),
 			},
 			want: want{
 				durations: []*timeslice.Item[T]{
-					NewItem(&existing, time.Date(2024, 1, 1, 9, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 9, 59, 59, 0, time.UTC)),
+					helper.NewItem(existing, time.Date(2024, 1, 1, 9, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 9, 59, 59, 0, time.UTC)),
 				},
 				err: nil,
 			},
@@ -163,12 +164,12 @@ func TestItem_Adjust(t *testing.T) {
 		{
 			name: "success/2",
 			args: args{
-				existing: NewItem(&existing, time.Date(2024, 1, 1, 9, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 9, 59, 59, 0, time.UTC)),
-				adding:   NewItem(&adding, time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 10, 59, 59, 0, time.UTC)),
+				existing: helper.NewItem(existing, time.Date(2024, 1, 1, 9, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 9, 59, 59, 0, time.UTC)),
+				adding:   helper.NewItem(adding, time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 10, 59, 59, 0, time.UTC)),
 			},
 			want: want{
 				durations: []*timeslice.Item[T]{
-					NewItem(&existing, time.Date(2024, 1, 1, 9, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 9, 59, 59, 0, time.UTC)),
+					helper.NewItem(existing, time.Date(2024, 1, 1, 9, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 9, 59, 59, 0, time.UTC)),
 				},
 				err: nil,
 			},
@@ -177,8 +178,8 @@ func TestItem_Adjust(t *testing.T) {
 		{
 			name: "success/3",
 			args: args{
-				existing: NewItem(&existing, time.Date(2024, 1, 1, 9, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 9, 59, 59, 0, time.UTC)),
-				adding:   NewItem(&adding, time.Date(2024, 1, 1, 9, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 9, 59, 59, 0, time.UTC)),
+				existing: helper.NewItem(existing, time.Date(2024, 1, 1, 9, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 9, 59, 59, 0, time.UTC)),
+				adding:   helper.NewItem(adding, time.Date(2024, 1, 1, 9, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 9, 59, 59, 0, time.UTC)),
 			},
 			want: want{
 				durations: []*timeslice.Item[T]{},
@@ -189,13 +190,13 @@ func TestItem_Adjust(t *testing.T) {
 		{
 			name: "success/4",
 			args: args{
-				existing: NewItem(&existing, time.Date(2024, 1, 1, 8, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 10, 59, 59, 0, time.UTC)),
-				adding:   NewItem(&adding, time.Date(2024, 1, 1, 9, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 9, 59, 59, 0, time.UTC)),
+				existing: helper.NewItem(existing, time.Date(2024, 1, 1, 8, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 10, 59, 59, 0, time.UTC)),
+				adding:   helper.NewItem(adding, time.Date(2024, 1, 1, 9, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 9, 59, 59, 0, time.UTC)),
 			},
 			want: want{
 				durations: []*timeslice.Item[T]{
-					NewItem(&existing, time.Date(2024, 1, 1, 8, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 8, 59, 59, 0, time.UTC)),
-					NewItem(&existing, time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 10, 59, 59, 0, time.UTC)),
+					helper.NewItem(existing, time.Date(2024, 1, 1, 8, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 8, 59, 59, 0, time.UTC)),
+					helper.NewItem(existing, time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 10, 59, 59, 0, time.UTC)),
 				},
 				err: nil,
 			},
@@ -204,12 +205,12 @@ func TestItem_Adjust(t *testing.T) {
 		{
 			name: "success/5",
 			args: args{
-				existing: NewItem(&existing, time.Date(2024, 1, 1, 8, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 9, 29, 59, 0, time.UTC)),
-				adding:   NewItem(&adding, time.Date(2024, 1, 1, 9, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 9, 59, 59, 0, time.UTC)),
+				existing: helper.NewItem(existing, time.Date(2024, 1, 1, 8, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 9, 29, 59, 0, time.UTC)),
+				adding:   helper.NewItem(adding, time.Date(2024, 1, 1, 9, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 9, 59, 59, 0, time.UTC)),
 			},
 			want: want{
 				durations: []*timeslice.Item[T]{
-					NewItem(&existing, time.Date(2024, 1, 1, 8, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 8, 59, 59, 0, time.UTC)),
+					helper.NewItem(existing, time.Date(2024, 1, 1, 8, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 8, 59, 59, 0, time.UTC)),
 				},
 				err: nil,
 			},
@@ -218,12 +219,12 @@ func TestItem_Adjust(t *testing.T) {
 		{
 			name: "success/6",
 			args: args{
-				existing: NewItem(&existing, time.Date(2024, 1, 1, 9, 30, 0, 0, time.UTC), time.Date(2024, 1, 1, 10, 59, 59, 0, time.UTC)),
-				adding:   NewItem(&adding, time.Date(2024, 1, 1, 9, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 9, 59, 59, 0, time.UTC)),
+				existing: helper.NewItem(existing, time.Date(2024, 1, 1, 9, 30, 0, 0, time.UTC), time.Date(2024, 1, 1, 10, 59, 59, 0, time.UTC)),
+				adding:   helper.NewItem(adding, time.Date(2024, 1, 1, 9, 0, 0, 0, time.UTC), time.Date(2024, 1, 1, 9, 59, 59, 0, time.UTC)),
 			},
 			want: want{
 				durations: []*timeslice.Item[T]{
-					NewItem(&existing, time.Date(2024, 1, 1, 10, 00, 0, 0, time.UTC), time.Date(2024, 1, 1, 10, 59, 59, 0, time.UTC)),
+					helper.NewItem(existing, time.Date(2024, 1, 1, 10, 00, 0, 0, time.UTC), time.Date(2024, 1, 1, 10, 59, 59, 0, time.UTC)),
 				},
 				err: nil,
 			},
