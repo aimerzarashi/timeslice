@@ -15,10 +15,10 @@ type (
 )
 
 var (
-	ErrItemStartAtEmpty      = errors.New("Item: startAt cannot be empty")
-	ErrItemEndAtEmpty        = errors.New("Item: endAt cannot be empty")
-	ErrItemInvalid           = errors.New("Item: invalid")
-	ErrCollectionUnexpection = errors.New("Collection: unexpection")
+	ErrItemStartAtEmpty = errors.New("Item: startAt cannot be empty")
+	ErrItemEndAtEmpty   = errors.New("Item: endAt cannot be empty")
+	ErrItemInvalid      = errors.New("Item: invalid")
+	ErrItemUnexception  = errors.New("Item: unexpection")
 )
 
 func NewItem[T any](value *T, startAt, endAt time.Time) (*Item[T], error) {
@@ -77,13 +77,13 @@ func (i Item[T]) Adjust(adding *Item[T]) ([]*Item[T], error) {
 		// 分割した既存期間の前方は、開始日時を調整して返す
 		foward, err := NewItem(i.value, i.startAt, adding.startAt.Add(-1*time.Second))
 		if err != nil {
-			return nil, errors.Join(ErrCollectionUnexpection, err)
+			return nil, errors.Join(ErrItemUnexception, err)
 		}
 
 		// 分割した既存期間の後方は、終了日時を調整して返す
 		backward, err := NewItem(i.value, adding.endAt.Add(1*time.Second), i.endAt)
 		if err != nil {
-			return nil, errors.Join(ErrCollectionUnexpection, err)
+			return nil, errors.Join(ErrItemUnexception, err)
 		}
 
 		return []*Item[T]{foward, backward}, nil
@@ -93,7 +93,7 @@ func (i Item[T]) Adjust(adding *Item[T]) ([]*Item[T], error) {
 	if adding.startAt.Compare(i.endAt) < 0 && adding.endAt.Compare(i.endAt) > 0 {
 		foward, err := NewItem[T](i.value, i.startAt, adding.startAt.Add(-1*time.Second))
 		if err != nil {
-			return nil, errors.Join(ErrCollectionUnexpection, err)
+			return nil, errors.Join(ErrItemUnexception, err)
 		}
 		return []*Item[T]{foward}, nil
 	}
@@ -102,10 +102,10 @@ func (i Item[T]) Adjust(adding *Item[T]) ([]*Item[T], error) {
 	if adding.startAt.Compare(i.startAt) < 0 && adding.endAt.Compare(i.endAt) < 0 {
 		backward, err := NewItem[T](i.value, adding.endAt.Add(1*time.Second), i.endAt)
 		if err != nil {
-			return nil, errors.Join(ErrCollectionUnexpection, err)
+			return nil, errors.Join(ErrItemUnexception, err)
 		}
 		return []*Item[T]{backward}, nil
 	}
 
-	return nil, ErrCollectionUnexpection
+	return nil, ErrItemUnexception
 }
