@@ -1,0 +1,320 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>timeslice: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/aimerzarashi/timeslice/collection.go (92.9%)</option>
+				
+				<option value="file1">github.com/aimerzarashi/timeslice/internal/helper/test.go (0.0%)</option>
+				
+				<option value="file2">github.com/aimerzarashi/timeslice/value.go (86.1%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package timeslice
+
+import (
+        "errors"
+        "sort"
+        "time"
+)
+
+type (
+        Collection[T any] struct {
+                items []*Item[T]
+        }
+)
+
+var (
+        ErrCollectionInvalid  = errors.New("Collection: invalid")
+        ErrCollectionNotFound = errors.New("Collection: not found")
+)
+
+func NewCollection[T any](initItems ...*Item[T]) (*Collection[T], error) <span class="cov8" title="1">{
+        // startAtで昇順ソート
+        sort.Slice(initItems, func(i, j int) bool </span><span class="cov8" title="1">{
+                return initItems[i].StartAt().Before(initItems[j].StartAt())
+        }</span>)
+
+        // 期間が重複していないか確認
+        <span class="cov8" title="1">for i := 0; i &lt; len(initItems)-1; i++ </span><span class="cov8" title="1">{
+                if initItems[i].EndAt().Compare(initItems[i+1].StartAt()) &gt;= 0 </span><span class="cov8" title="1">{
+                        return nil, ErrCollectionInvalid
+                }</span>
+        }
+
+        <span class="cov8" title="1">var items []*Item[T]
+        if len(initItems) == 0 </span><span class="cov8" title="1">{
+                items = make([]*Item[T], len(initItems))
+        }</span> else<span class="cov8" title="1"> {
+                items = initItems
+        }</span>
+
+        <span class="cov8" title="1">return &amp;Collection[T]{
+                items: items,
+        }, nil</span>
+}
+
+func (c *Collection[T]) Items() []*Item[T] <span class="cov8" title="1">{
+        return c.items
+}</span>
+
+func (c *Collection[T]) Find(criteria time.Time) (*Item[T], error) <span class="cov8" title="1">{
+        for _, v := range c.items </span><span class="cov8" title="1">{
+                if v.Contains(criteria) </span><span class="cov8" title="1">{
+                        return v, nil
+                }</span>
+        }
+
+        <span class="cov8" title="1">return nil, ErrCollectionNotFound</span>
+}
+
+func (d *Collection[T]) Add(adding *Item[T]) (*Collection[T], error) <span class="cov8" title="1">{
+        buffer := make([]*Item[T], 0)
+        buffer = append(buffer, adding)
+
+        // 追加する期間が重複している場合は、追加する期間を優先して既存の期間を調整する
+        for _, v := range d.items </span><span class="cov8" title="1">{
+                adjusted, err := v.Adjust(adding)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+
+                <span class="cov8" title="1">buffer = append(buffer, adjusted...)</span>
+        }
+
+        // startAtで昇順ソートする
+        <span class="cov8" title="1">sort.Slice(buffer, func(i, j int) bool </span><span class="cov8" title="1">{
+                return buffer[i].StartAt().Before(buffer[j].StartAt())
+        }</span>)
+
+        // 調整済みの期間に置き換える
+        <span class="cov8" title="1">items, err := NewCollection(buffer...)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return items, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package helper
+
+import (
+        "time"
+
+        "github.com/aimerzarashi/timeslice"
+)
+
+func NewItem[T any](value T, startAt, endAt time.Time) *timeslice.Item[T] <span class="cov0" title="0">{
+        item, err := timeslice.NewItem(value, startAt, endAt)
+        if err != nil </span><span class="cov0" title="0">{
+                panic(err)</span>
+        }
+        <span class="cov0" title="0">return item</span>
+}</pre>
+		
+		<pre class="file" id="file2" style="display: none">package timeslice
+
+import (
+        "errors"
+        "fmt"
+        "time"
+)
+
+type (
+        Item[T any] struct {
+                value   T
+                startAt time.Time
+                endAt   time.Time
+        }
+)
+
+var (
+        ErrItemStartAtEmpty = errors.New("Item: startAt cannot be empty")
+        ErrItemEndAtEmpty   = errors.New("Item: endAt cannot be empty")
+        ErrItemInvalid      = errors.New("Item: invalid")
+        ErrItemUnexception  = errors.New("Item: unexpection")
+)
+
+func NewItem[T any](value T, startAt, endAt time.Time) (*Item[T], error) <span class="cov8" title="1">{
+        if startAt.IsZero() </span><span class="cov8" title="1">{
+                return nil, ErrItemStartAtEmpty
+        }</span>
+        <span class="cov8" title="1">if endAt.IsZero() </span><span class="cov8" title="1">{
+                return nil, ErrItemEndAtEmpty
+        }</span>
+        <span class="cov8" title="1">if startAt.Compare(endAt) &gt; 0 </span><span class="cov8" title="1">{
+                return nil, errors.Join(ErrItemInvalid, fmt.Errorf(" want startAt: %s &lt;= endAt: %s", startAt.Format(time.RFC3339), endAt.Format(time.RFC3339)))
+        }</span>
+        <span class="cov8" title="1">return &amp;Item[T]{
+                value:   value,
+                startAt: startAt,
+                endAt:   endAt,
+        }, nil</span>
+}
+
+func (i* Item[T]) Value() T <span class="cov8" title="1">{
+        return i.value
+}</span>
+
+func (i* Item[T]) StartAt() time.Time <span class="cov8" title="1">{
+        return i.startAt
+}</span>
+
+func (i* Item[T]) EndAt() time.Time <span class="cov8" title="1">{
+        return i.endAt
+}</span>
+
+func (i* Item[T]) Contains(t time.Time) bool <span class="cov8" title="1">{
+        return i.startAt.Compare(t) &lt;= 0 &amp;&amp; i.endAt.Compare(t) &gt;= 0
+}</span>
+
+// 既存期間と追加期間が重複している場合は、追加期間を優先して調整した既存期間を返す
+func (i *Item[T]) Adjust(adding *Item[T]) ([]*Item[T], error) <span class="cov8" title="1">{
+        // 追加期間に対し、既存期間は重複しない前方に位置するため、そのまま返す
+        if adding.startAt.Compare(i.endAt) &gt; 0 </span><span class="cov8" title="1">{
+                return []*Item[T]{i}, nil
+        }</span>
+
+        // 追加期間に対し、既存期間は重複しない後方に位置するため、そのまま返す
+        <span class="cov8" title="1">if adding.endAt.Compare(i.startAt) &lt; 0 </span><span class="cov8" title="1">{
+                return []*Item[T]{i}, nil
+        }</span>
+
+        // 追加期間が既存期間を包含するため、nilで返す
+        <span class="cov8" title="1">if adding.startAt.Compare(i.startAt) &lt;= 0 &amp;&amp; adding.endAt.Compare(i.endAt) &gt;= 0 </span><span class="cov8" title="1">{
+                return []*Item[T]{}, nil
+        }</span>
+
+        // 追加期間が既存期間に包含されるため、追加期間を優先して前方と後方に分割して返す
+        <span class="cov8" title="1">if adding.startAt.Compare(i.startAt) &gt; 0 &amp;&amp; adding.endAt.Compare(i.endAt) &lt; 0 </span><span class="cov8" title="1">{
+
+                // 分割した既存期間の前方は、開始日時を調整して返す
+                foward, err := NewItem(i.value, i.startAt, adding.startAt.Add(-1*time.Second))
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, errors.Join(ErrItemUnexception, err)
+                }</span>
+
+                // 分割した既存期間の後方は、終了日時を調整して返す
+                <span class="cov8" title="1">backward, err := NewItem(i.value, adding.endAt.Add(1*time.Second), i.endAt)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, errors.Join(ErrItemUnexception, err)
+                }</span>
+
+                <span class="cov8" title="1">return []*Item[T]{foward, backward}, nil</span>
+        }
+
+        // 追加期間に対し、既存期間の終了日時が重複するため、既存期間の終了日時を調整して返す
+        <span class="cov8" title="1">if adding.startAt.Compare(i.endAt) &lt; 0 &amp;&amp; adding.endAt.Compare(i.endAt) &gt; 0 </span><span class="cov8" title="1">{
+                foward, err := NewItem[T](i.value, i.startAt, adding.startAt.Add(-1*time.Second))
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, errors.Join(ErrItemUnexception, err)
+                }</span>
+                <span class="cov8" title="1">return []*Item[T]{foward}, nil</span>
+        }
+
+        // 追加期間に対し、既存期間の開始日時が重複するため、既存期間の開始日時を調整して返す
+        <span class="cov8" title="1">if adding.startAt.Compare(i.startAt) &lt; 0 &amp;&amp; adding.endAt.Compare(i.endAt) &lt; 0 </span><span class="cov8" title="1">{
+                backward, err := NewItem[T](i.value, adding.endAt.Add(1*time.Second), i.endAt)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, errors.Join(ErrItemUnexception, err)
+                }</span>
+                <span class="cov8" title="1">return []*Item[T]{backward}, nil</span>
+        }
+
+        <span class="cov0" title="0">return nil, ErrItemUnexception</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
